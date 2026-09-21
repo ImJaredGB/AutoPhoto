@@ -68,28 +68,40 @@ def estado_checkbox():
     print(checkboxValue.get())
 
 def procesar_fotos():
+
+    if (
+        carpetaSelectValue.get() == "No hay carpeta seleccionada"
+        or
+        carpetaMoverSelectValue.get() == "No hay carpeta seleccionada"
+    ):
+        animar_error()
+        return
+
+    animar_proceso()
+
     origen = Path(carpetaSelectValue.get())
     destino = Path(carpetaMoverSelectValue.get())
 
     extension = archivoSelect.get().lower()
+
     prefijo = prefijoValue.get()
     sufijo = sufijoValue.get()
-    nombre_carpeta = crearCarpeta.get()
 
-    # Comprobar carpeta de origen
-    if not origen.exists() or not origen.is_dir():
-        print("La carpeta de origen no existe o no es válida.")
-        return
+    nombre_carpeta = crearCarpeta.get()
 
     # Comprobar crear o usar destino
     if checkboxValue.get():
+
         destino = destino / nombre_carpeta
         destino.mkdir(parents=True, exist_ok=True)
+
     else:
+
         destino.mkdir(parents=True, exist_ok=True)
 
     # Buscar fotos
     fotos = list(origen.glob(f"*.{extension}"))
+
     if not fotos:
         print(f"No se encontraron archivos {extension}")
         return
@@ -98,17 +110,98 @@ def procesar_fotos():
     for numero, foto in enumerate(fotos, start=1):
 
         nuevo_nombre = f"{prefijo}{numero:04d}{sufijo}{foto.suffix}"
+
         nuevo_archivo = destino / nuevo_nombre
+
         shutil.move(
             str(foto),
             str(nuevo_archivo)
         )
+
         print(f"Movido: {foto.name} → {nuevo_nombre}")
 
     print("Proceso terminado.")
 
 def cambiar_modo():
     print("Funciona bien")
+
+def animar_error(paso=0):
+    colores = [
+        "#752121",
+        "#852F2F",
+        "#752121",
+        "#852F2F",
+        "#752121",
+        "#852F2F",
+        "#752121"
+    ]
+
+    if paso < len(colores):
+        botonProcesar.configure(
+            text="Faltan datos",
+            fg_color=colores[paso]
+        )
+
+        ventana.after(
+            100,
+            lambda: animar_error(paso + 1)
+        )
+
+    else:
+
+        botonProcesar.configure(
+            text="x",
+            fg_color="#622626"
+        )
+
+        ventana.after(
+            1000,
+            finalizar_animacion
+        )
+
+def animar_proceso(paso=0):
+
+    colores = [
+        "#555555",
+        "#505C52",
+        "#4C624F",
+        "#48694C",
+        "#43704A",
+        "#3E7647",
+        "#3A7D44"
+    ]
+
+    if paso < len(colores):
+
+        botonProcesar.configure(
+            text="Procesando...",
+            fg_color=colores[paso]
+        )
+
+        ventana.after(
+            100,
+            lambda: animar_proceso(paso + 1)
+        )
+
+    else:
+
+        botonProcesar.configure(
+            text="✓",
+            fg_color="#3A7D44"
+        )
+
+        ventana.after(
+            1000,
+            finalizar_animacion
+        )
+
+
+def finalizar_animacion():
+
+    botonProcesar.configure(
+        text="Procesar fotos",
+        fg_color="#1F6AA5"
+    )
 
 # Estructura de la ventana principal
 ventana = tk.Tk()
@@ -119,6 +212,15 @@ contenido = tk.Frame(
     pady=20
     )
 contenido.pack()
+
+"""
+Experimental
+"""
+
+
+"""
+FIN EXPERIMENTAL
+"""
 
 # Seleccionar carpeta
 carpetaSelectLabel = tk.Label(contenido, text="Trabajar con carpeta:", fg="white")
@@ -278,8 +380,6 @@ botonProcesar = ctk.CTkButton(
     command=procesar_fotos
 )
 
-"""
-
 botonCambiarModod = ctk.CTkButton(
     contenido,
     text="Cambiar modo",
@@ -291,6 +391,5 @@ botonCambiarModod = ctk.CTkButton(
 
 botonCambiarModod.grid(row=7, column=1, padx=10, pady=10)
 
-"""
 botonProcesar.grid(row=7, column=2, padx=10, pady=10)
 ventana.mainloop()
