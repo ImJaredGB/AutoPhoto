@@ -29,6 +29,9 @@ def seleccionar_carpeta():
         carpetaSelectValue.set(ruta)
 
 def seleccionar_carpeta_automatica():
+
+    global sd_conectada
+
     ventanaCarpetaAuto = tk.Tk()
     ventanaCarpetaAuto.withdraw()
     ventanaCarpetaAuto.attributes('-topmost', True)
@@ -38,12 +41,18 @@ def seleccionar_carpeta_automatica():
     )
 
     ventanaCarpetaAuto.destroy()
+
     if not ruta_auto:
         print("No se seleccionó ninguna carpeta.")
         return None
-    else:
-        print(f"Carpeta seleccionada: {ruta_auto}")
-        carpetaAutomaticaSelectValue.set(ruta_auto)
+    
+    
+    print(f"Carpeta seleccionada: {ruta_auto}")
+    carpetaAutomaticaSelectValue.set(ruta_auto)
+    sd_conectada = False
+    detectar_sd()
+
+    
 
 
 def mover_archivos():
@@ -120,9 +129,9 @@ def procesar_fotos():
         return
 
     # Procesar fotos
-    for numero, foto in enumerate(fotos, start=1):
+    for foto in fotos:
 
-        nuevo_nombre = f"{prefijo}{numero:04d}{sufijo}{foto.suffix}"
+        nuevo_nombre = ( f"{prefijo}" f"{foto.stem}" f"{sufijo}" f"{foto.suffix}" )
 
         nuevo_archivo = destino / nuevo_nombre
 
@@ -214,10 +223,116 @@ def finalizar_animacion():
 def cambiar_modo():
     vista_principal.grid_remove()
     vista_automatica.grid(row=0, column=0)
+    iniciar_modo_automatico()
+
+"""
+Experimental
+"""
+detector_activo = False
+sd_conectada = False
+def iniciar_modo_automatico():
+    print("Modo automatico activo")
+    global detector_activo
+
+    if detector_activo:
+        return
+
+    detector_activo = True
+    detectar_sd()
+    
+
+def detener_modo_automatico():
+    print("Modo automatico pausado")
+    global detector_activo
+
+    detector_activo = False
+
+def detectar_sd():
+
+    global sd_conectada
+
+    if not detector_activo:
+        return
+
+    ruta_sd = Path(carpetaAutomaticaSelectValue.get())
+
+    conectada = ruta_sd.exists() and ruta_sd.is_dir()
+
+    if conectada and not sd_conectada:
+        print("SD conectada")
+        sd_conectada = True
+        procesar_sd(ruta_sd)
+
+    elif not conectada and sd_conectada:
+        print("SD desconectada")
+        sd_conectada = False
+
+    ventana.after(1000, detectar_sd)
 
 def volver():
+    detener_modo_automatico()
     vista_automatica.grid_remove()
     vista_principal.grid(row=0, column=0)
+
+def procesar_sd(ruta_sd):
+    print(f"Procesando SD: {ruta_sd}")
+
+    carpetas_ignoradas = {
+        "AVF_INFO",
+        ".fseventsd"
+    }
+
+    archivos = []
+
+    for archivo in ruta_sd.rglob("*"):
+
+        if not archivo.is_file():
+            continue
+
+        # Ignorar archivos auxiliares de macOS
+        if archivo.name.startswith("._"):
+            continue
+
+        # Ignorar carpetas del sistema de la SD
+        if any(
+            carpeta.name in carpetas_ignoradas
+            for carpeta in archivo.parents
+        ):
+            continue
+
+        # Ignorar carpetas creadas por AutoPhoto
+        if any(
+            carpeta.name.startswith("AP_")
+            for carpeta in archivo.parents
+        ):
+            continue
+
+        archivos.append(archivo)
+
+    if not archivos:
+        print("No se han encontrado archivos nuevos en la SD")
+        return
+
+    print(f"Se han encontrado {len(archivos)} archivos:")
+
+    for archivo in archivos:
+
+        extension = archivo.suffix.lower().replace(".", "")
+
+        if not extension:
+            continue
+
+        carpeta_destino = ruta_sd / f"AP_{extension.upper()}"
+        carpeta_destino.mkdir(exist_ok=True)
+
+        destino = carpeta_destino / archivo.name
+
+        shutil.move(str(archivo), str(destino))
+
+        print(f"{archivo.name} -> {carpeta_destino.name}/")
+"""
+FIN EXPERIMENTAL
+"""
 
 # Estructura de la ventana principal
 ventana = tk.Tk()
@@ -230,9 +345,6 @@ contenedor = tk.Frame(
 
 contenedor.pack()
 
-"""
-Experimental
-"""
 
 vista_principal = ctk.CTkFrame(contenedor)
 vista_principal.grid(row=0, column=0)
@@ -277,9 +389,6 @@ botonVolver = ctk.CTkButton(
     text_color="#373636",
 )
 botonVolver.grid(row=1,column=1,padx=10,pady=10)
-"""
-FIN EXPERIMENTAL
-"""
 
 # Seleccionar carpeta
 carpetaSelectLabel = tk.Label(vista_principal, text="Trabajar con carpeta:")
@@ -316,6 +425,7 @@ archivoSelect = ctk.CTkComboBox(
         "HEIF",
         "JPEG",
         "RAW",
+        "JPG",
         "MP4"],
     width=150,
     height=25,
@@ -448,4 +558,18 @@ botonCambiarModo = ctk.CTkButton(
 
 botonCambiarModo.grid(row=7, column=1, padx=10, pady=10)
 botonProcesar.grid(row=7, column=2, padx=10, pady=10)
+
+"""
+Boton de Pruebas
+
+botonTest = ctk.CTkButton(
+    vista_automatica,  <-- Cambiar vista
+    text="Test",
+    command=detectar_sd #      <- Cambiar funcion
+)
+botonTest.grid(row=1,column=0,padx=10,pady=10)  <-- Cambiar posicion
+
+"""
+
+
 ventana.mainloop()
