@@ -10,9 +10,6 @@ from pathlib import Path
 
 
 # Funciones
-def cerrar():
-    ventana.destroy()
-
 def seleccionar_carpeta():
     ventanaCarpeta = tk.Tk()
     ventanaCarpeta.withdraw()
@@ -122,9 +119,6 @@ def procesar_fotos():
 
     print("Proceso terminado.")
 
-def cambiar_modo():
-    print("Funciona bien")
-
 def animar_error(paso=0):
     colores = [
         "#752121",
@@ -203,40 +197,111 @@ def finalizar_animacion():
         fg_color="#1F6AA5"
     )
 
+def cambiar_modo():
+    vista_principal.grid_remove()
+    vista_automatica.grid(row=0, column=0)
+
 # Estructura de la ventana principal
 ventana = tk.Tk()
-ventana.title("Auto Assigmnment")
-contenido = tk.Frame(
+ventana.title("Auto Assignment")
+contenedor = tk.Frame(
     ventana,
-    padx=20, 
+    padx=20,
     pady=20
-    )
-contenido.pack()
+)
+
+contenedor.pack()
 
 """
 Experimental
 """
 
+def volver():
+    vista_automatica.grid_remove()
+    vista_principal.grid(row=0, column=0)
+
+vista_principal = ctk.CTkFrame(contenedor)
+vista_principal.grid(row=0, column=0)
+
+vista_automatica = ctk.CTkFrame(contenedor)
+
+# Vista automática
+
+carpetaAutomaticaLabel = ctk.CTkLabel(
+    vista_automatica,
+    text="Trabajar con carpeta"
+)
+
+carpetaAutomaticaLabel.grid(
+    row=0,
+    column=0,
+    padx=10,
+    pady=10
+)
+
+
+carpetaAutomaticaValue = tk.StringVar(
+    value="No hay carpeta seleccionada"
+)
+
+carpetaAutomaticaEntry = ctk.CTkLabel(
+    vista_automatica,
+    textvariable=carpetaAutomaticaValue,
+    text_color="#888888"
+)
+
+carpetaAutomaticaEntry.grid(
+    row=0,
+    column=1,
+    padx=10,
+    pady=10
+)
+
+
+botonSeleccionarAutomatica = ctk.CTkButton(
+    vista_automatica,
+    text="Seleccionar"
+)
+
+botonSeleccionarAutomatica.grid(
+    row=0,
+    column=2,
+    padx=10,
+    pady=10
+)
+
+botonVolver = ctk.CTkButton(
+    vista_automatica,
+    text="Volver",
+    command=volver
+)
+
+botonVolver.grid(
+    row=3,
+    column=0,
+    padx=10,
+    pady=10
+)
 
 """
 FIN EXPERIMENTAL
 """
 
 # Seleccionar carpeta
-carpetaSelectLabel = tk.Label(contenido, text="Trabajar con carpeta:", fg="white")
+carpetaSelectLabel = tk.Label(vista_principal, text="Trabajar con carpeta:", fg="white")
 carpetaSelectLabel.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 carpetaSelectValue = tk.StringVar(
     value="No hay carpeta seleccionada"
 )
 carpetaSelectEntry = tk.Label(
-    contenido, 
+    vista_principal, 
     textvariable=carpetaSelectValue, 
     fg="white",
     width=30
     )
 carpetaSelectEntry.grid(row=0, column=1, padx=10, pady=10, sticky="w")
 carpetaSelect = ctk.CTkButton(
-    contenido, text="Seleccionar",
+    vista_principal, text="Seleccionar",
     command=seleccionar_carpeta,
     fg_color="#F2F2F2",
     hover_color="#CDCDCD",
@@ -249,10 +314,10 @@ prefijoValue = tk.StringVar()
 sufijoValue = tk.StringVar()
 
 # Archivos a trabajar
-archivoSelectLabel = tk.Label(contenido, text="Tipo de archivo:", fg="white")
+archivoSelectLabel = tk.Label(vista_principal, text="Tipo de archivo:", fg="white")
 archivoSelectLabel.grid(row=1, column=0, padx=10, pady=10, sticky="w")
 archivoSelect = ctk.CTkComboBox(
-    contenido, 
+    vista_principal, 
     values=[
         "ARW",
         "HEIF",
@@ -273,12 +338,12 @@ archivoSelectValue = archivoSelect.get()
 print(archivoSelectValue)
 
 # Estructura del nombre final del archivo
-PrefijoLabel = tk.Label(contenido, text="Prefijo:", fg="white")
+PrefijoLabel = tk.Label(vista_principal, text="Prefijo:", fg="white")
 PrefijoLabel.grid(
     row=2, column=0, padx=10, pady=10, sticky="w"
 )
 Prefijo = ctk.CTkEntry(
-    contenido,
+    vista_principal,
     width=150,
     height=25,
     corner_radius=10,
@@ -289,12 +354,12 @@ Prefijo = ctk.CTkEntry(
     )
 Prefijo.grid(row=2, column=1, padx=10, pady=10)
 
-SufijoLabel = tk.Label(contenido, text="Sufijo:", fg="white")
+SufijoLabel = tk.Label(vista_principal, text="Sufijo:", fg="white")
 SufijoLabel.grid(
     row=3, column=0, padx=10, pady=10, sticky="w"
 )
 Sufijo = ctk.CTkEntry(
-    contenido,
+    vista_principal,
     width=150,
     height=25,
     corner_radius=10,
@@ -305,20 +370,20 @@ Sufijo = ctk.CTkEntry(
     )
 Sufijo.grid(row=3, column=1, padx=10, pady=10)
 
-carpetaMoverSelectLabel = tk.Label(contenido, text="Carpeta de destino:", fg="white")
+carpetaMoverSelectLabel = tk.Label(vista_principal, text="Carpeta de destino:", fg="white")
 carpetaMoverSelectLabel.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 carpetaMoverSelectValue = tk.StringVar(
     value="No hay carpeta seleccionada"
 )
 carpetaMoverSelectEntry = tk.Label(
-    contenido, 
+    vista_principal, 
     textvariable=carpetaMoverSelectValue, 
     fg="white",
     width=30
     )
 carpetaMoverSelectEntry.grid(row=4, column=1, padx=10, pady=10, sticky="w")
 carpetaMoverSelect = ctk.CTkButton(
-    contenido, text="Seleccionar",
+    vista_principal, text="Seleccionar",
     command=lambda: carpetaMoverSelectValue.set(mover_archivos()),
     fg_color="#F2F2F2",
     hover_color="#CDCDCD",
@@ -327,12 +392,12 @@ carpetaMoverSelect = ctk.CTkButton(
     )
 carpetaMoverSelect.grid(row=4, column=2, padx=10, pady=10)
 
-crearCapertaLabel = tk.Label(contenido, text="Nombre de la carpeta:", fg="white")
+crearCapertaLabel = tk.Label(vista_principal, text="Nombre de la carpeta:", fg="white")
 crearCapertaLabel.grid(
     row=5, column=0, padx=10, pady=10, sticky="w"
 )
 crearCarpeta = ctk.CTkEntry(
-    contenido,
+    vista_principal,
     width=150,
     height=25,
     corner_radius=10,
@@ -345,7 +410,7 @@ crearCarpeta.grid(row=5, column=1, padx=10, pady=10)
 checkboxValue = tk.BooleanVar(value=False)
 
 checkbox = ctk.CTkCheckBox(
-    contenido,
+    vista_principal,
     text="Crear carpeta",
     variable=checkboxValue,
     command=estado_checkbox
@@ -356,14 +421,14 @@ checkbox.grid(
     columnspan=2,
     pady=10
 )
-previsualizarArchivoLabel = tk.Label(contenido, text="Previsualización:", fg="white")
+previsualizarArchivoLabel = tk.Label(vista_principal, text="Previsualización:", fg="white")
 previsualizarArchivoLabel.grid(
     row=1, column=2, padx=10, pady=10, sticky="w"
 )
 prefijoValue.trace_add("write", actualizar_previsualizacion)
 sufijoValue.trace_add("write", actualizar_previsualizacion)
 previsualizacion = ctk.CTkLabel(
-    contenido,
+    vista_principal,
     text="Archivo.JPG",
     text_color="#888888"
 )
@@ -375,13 +440,13 @@ previsualizacion.grid(
 )
 
 botonProcesar = ctk.CTkButton(
-    contenido,
+    vista_principal,
     text="Procesar fotos",
     command=procesar_fotos
 )
 
-botonCambiarModod = ctk.CTkButton(
-    contenido,
+botonCambiarModo = ctk.CTkButton(
+    vista_principal,
     text="Cambiar modo",
     command=cambiar_modo,
     fg_color="#F2F2F2",
@@ -389,7 +454,6 @@ botonCambiarModod = ctk.CTkButton(
     text_color="#373636"
 )
 
-botonCambiarModod.grid(row=7, column=1, padx=10, pady=10)
-
+botonCambiarModo.grid(row=7, column=1, padx=10, pady=10)
 botonProcesar.grid(row=7, column=2, padx=10, pady=10)
 ventana.mainloop()
